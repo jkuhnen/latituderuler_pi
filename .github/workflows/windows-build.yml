@@ -1,0 +1,44 @@
+name: Windows Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-win32:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install wxWidgets
+        shell: pwsh
+        run: |
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install wxwidgets:x86-windows
+
+      - name: Configure
+        shell: pwsh
+        run: |
+          cmake -S . -B build -A Win32 `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x86-windows
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build build --config Release
+
+      - name: Package
+        shell: pwsh
+        run: cpack --config build/CPackConfig.cmake -C Release -B build/package
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: latituderuler-win32
+          path: build/package/*.tar.gz
+          if-no-files-found: error
