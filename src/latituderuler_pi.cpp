@@ -36,11 +36,13 @@ struct Theme {
   wxColour major;
   wxColour minor;
   wxColour text;
+  wxColour marker;
   float glBackground[4];
   float glBorder[4];
   float glMajor[4];
   float glMinor[4];
   float glText[4];
+  float glMarker[4];
 };
 
 Theme ThemeFor(PI_ColorScheme scheme) {
@@ -50,49 +52,58 @@ Theme ThemeFor(PI_ColorScheme scheme) {
     t.border = wxColour(130, 45, 40);
     t.major = wxColour(220, 95, 75);
     t.minor = wxColour(130, 55, 48);
-    t.text = wxColour(238, 125, 95);
+    t.text = wxColour(255, 170, 135);
+    t.marker = wxColour(255, 205, 80);
     const float bg[] = {0.08f, 0.01f, 0.01f, 0.88f};
     const float border[] = {0.50f, 0.12f, 0.10f, 0.95f};
     const float major[] = {0.92f, 0.32f, 0.24f, 0.98f};
     const float minor[] = {0.50f, 0.17f, 0.14f, 0.85f};
-    const float text[] = {0.96f, 0.44f, 0.32f, 1.0f};
+    const float text[] = {1.00f, 0.62f, 0.48f, 1.0f};
+    const float marker[] = {1.00f, 0.78f, 0.20f, 1.0f};
     std::copy(bg, bg + 4, t.glBackground);
     std::copy(border, border + 4, t.glBorder);
     std::copy(major, major + 4, t.glMajor);
     std::copy(minor, minor + 4, t.glMinor);
     std::copy(text, text + 4, t.glText);
+    std::copy(marker, marker + 4, t.glMarker);
   } else if (scheme == PI_GLOBAL_COLOR_SCHEME_DUSK) {
     t.background = wxColour(75, 64, 40);
     t.border = wxColour(145, 125, 78);
     t.major = wxColour(225, 205, 145);
     t.minor = wxColour(145, 126, 82);
-    t.text = wxColour(238, 218, 160);
+    t.text = wxColour(255, 235, 175);
+    t.marker = wxColour(95, 185, 255);
     const float bg[] = {0.20f, 0.17f, 0.09f, 0.86f};
     const float border[] = {0.53f, 0.44f, 0.24f, 0.95f};
     const float major[] = {0.90f, 0.81f, 0.54f, 0.98f};
     const float minor[] = {0.56f, 0.47f, 0.27f, 0.82f};
-    const float text[] = {0.95f, 0.87f, 0.62f, 1.0f};
+    const float text[] = {1.00f, 0.92f, 0.68f, 1.0f};
+    const float marker[] = {0.30f, 0.72f, 1.00f, 1.0f};
     std::copy(bg, bg + 4, t.glBackground);
     std::copy(border, border + 4, t.glBorder);
     std::copy(major, major + 4, t.glMajor);
     std::copy(minor, minor + 4, t.glMinor);
     std::copy(text, text + 4, t.glText);
+    std::copy(marker, marker + 4, t.glMarker);
   } else {
     t.background = wxColour(244, 244, 238);
     t.border = wxColour(105, 110, 112);
     t.major = wxColour(40, 48, 52);
     t.minor = wxColour(125, 130, 132);
-    t.text = wxColour(25, 31, 34);
+    t.text = wxColour(15, 20, 22);
+    t.marker = wxColour(25, 115, 210);
     const float bg[] = {0.96f, 0.96f, 0.93f, 0.88f};
     const float border[] = {0.36f, 0.39f, 0.40f, 0.96f};
     const float major[] = {0.10f, 0.13f, 0.15f, 0.98f};
     const float minor[] = {0.43f, 0.46f, 0.47f, 0.82f};
-    const float text[] = {0.06f, 0.08f, 0.09f, 1.0f};
+    const float text[] = {0.03f, 0.04f, 0.05f, 1.0f};
+    const float marker[] = {0.08f, 0.38f, 0.88f, 1.0f};
     std::copy(bg, bg + 4, t.glBackground);
     std::copy(border, border + 4, t.glBorder);
     std::copy(major, major + 4, t.glMajor);
     std::copy(minor, minor + 4, t.glMinor);
     std::copy(text, text + 4, t.glText);
+    std::copy(marker, marker + 4, t.glMarker);
   }
   return t;
 }
@@ -313,7 +324,7 @@ void DrawVectorGlyphGL(char c, float x, float y, float s) {
 void DrawVectorTextGL(const std::string &text, float x, float y, float s,
                       const float colour[4]) {
   SetGLColour(colour);
-  glLineWidth(std::max(1.0f, 1.10f * s));
+  glLineWidth(std::max(1.4f, 1.25f * s));
   float cursor = x;
   for (char c : text) {
     if (c == ' ') {
@@ -347,7 +358,8 @@ int LatitudeRulerPi::Init() {
   if (m_toolbarId >= 0) SetToolbarItemState(m_toolbarId, m_enabled);
 
   return INSTALLS_TOOLBAR_TOOL | WANTS_TOOLBAR_CALLBACK |
-         WANTS_OVERLAY_CALLBACK | WANTS_OPENGL_OVERLAY_CALLBACK;
+         WANTS_OVERLAY_CALLBACK | WANTS_OPENGL_OVERLAY_CALLBACK |
+         WANTS_MOUSE_EVENTS;
 }
 
 bool LatitudeRulerPi::DeInit() {
@@ -420,6 +432,22 @@ void LatitudeRulerPi::OnToolbarToolCallback(int id) {
   if (canvas) RequestRefresh(canvas);
 }
 
+bool LatitudeRulerPi::MouseEventHook(wxMouseEvent &event) {
+  const bool inside = m_enabled && !event.Leaving() && event.GetY() >= 0;
+  const int newY = inside ? event.GetY() : -1;
+  const bool changed = (inside != m_mouseInside) || (newY != m_mouseY);
+
+  m_mouseInside = inside;
+  m_mouseY = newY;
+
+  if (changed) {
+    wxWindow *canvas = GetOCPNCanvasWindow();
+    if (canvas) RequestRefresh(canvas);
+  }
+
+  return false;
+}
+
 void LatitudeRulerPi::SetColorScheme(PI_ColorScheme cs) {
   m_colorScheme = cs;
   wxWindow *canvas = GetOCPNCanvasWindow();
@@ -442,7 +470,8 @@ bool LatitudeRulerPi::RenderOverlay(wxDC &dc, PlugIn_ViewPort *vp) {
   dc.DrawLine(kRulerWidth - 1, 0, kRulerWidth - 1, vp->pix_height);
 
   wxFont font = *wxNORMAL_FONT;
-  font.SetPointSize(std::max(7, font.GetPointSize() - 1));
+  font.SetPointSize(std::max(9, font.GetPointSize()));
+  font.SetWeight(wxFONTWEIGHT_BOLD);
   dc.SetFont(font);
   dc.SetTextForeground(theme.text);
   dc.SetBackgroundMode(wxTRANSPARENT);
@@ -462,6 +491,16 @@ bool LatitudeRulerPi::RenderOverlay(wxDC &dc, PlugIn_ViewPort *vp) {
       if (labelY >= -2 && labelY + th <= vp->pix_height + 2)
         dc.DrawText(label, kLabelInset, labelY);
     }
+  }
+
+  if (m_mouseInside && m_mouseY >= 0 && m_mouseY < vp->pix_height) {
+    const int y = m_mouseY;
+    wxPoint marker[3] = {wxPoint(kRulerWidth - 1, y),
+                         wxPoint(kRulerWidth - 13, y - 6),
+                         wxPoint(kRulerWidth - 13, y + 6)};
+    dc.SetPen(wxPen(theme.marker, 1));
+    dc.SetBrush(wxBrush(theme.marker));
+    dc.DrawPolygon(3, marker);
   }
 
   return true;
@@ -527,13 +566,23 @@ bool LatitudeRulerPi::RenderGLOverlayMultiCanvas(wxGLContext *pcontext,
 
     if (tick.major) {
       const std::string label = FormatLatitudeAscii(tick.latitude, majorStep);
-      const float scale = 1.08f;
+      const float scale = 1.38f;
       const float labelHeight = 7.0f * scale;
       const float y = static_cast<float>(tick.y) - labelHeight * 0.5f;
       if (y >= -2.0f && y + labelHeight <= vp->pix_height + 2.0f)
         DrawVectorTextGL(label, static_cast<float>(kLabelInset), y, scale,
                          theme.glText);
     }
+  }
+
+  if (m_mouseInside && m_mouseY >= 0 && m_mouseY < vp->pix_height) {
+    const float y = static_cast<float>(m_mouseY);
+    SetGLColour(theme.glMarker);
+    glBegin(GL_TRIANGLES);
+    glVertex2f(static_cast<float>(kRulerWidth - 1), y);
+    glVertex2f(static_cast<float>(kRulerWidth - 13), y - 6.0f);
+    glVertex2f(static_cast<float>(kRulerWidth - 13), y + 6.0f);
+    glEnd();
   }
 
   glPopMatrix();
