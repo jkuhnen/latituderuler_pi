@@ -27,6 +27,7 @@ public:
 
   void OnToolbarToolCallback(int id) override;
   void SetColorScheme(PI_ColorScheme cs) override;
+  bool MouseEventHook(wxMouseEvent &event) override;
 
   bool RenderOverlay(wxDC &dc, PlugIn_ViewPort *vp) override;
   bool RenderGLOverlayMultiCanvas(wxGLContext *pcontext, PlugIn_ViewPort *vp,
@@ -42,6 +43,8 @@ private:
   int m_toolbarId = -1;
   bool m_enabled = true;
   PI_ColorScheme m_colorScheme = PI_GLOBAL_COLOR_SCHEME_DAY;
+  int m_mouseY = -1;
+  bool m_mouseInside = false;
 };
 
 #endif
