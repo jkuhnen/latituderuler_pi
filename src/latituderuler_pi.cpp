@@ -24,10 +24,11 @@
 
 namespace {
 
-constexpr int kRulerWidth = 82;
-constexpr int kMajorTickLength = 16;
-constexpr int kMinorTickLength = 7;
-constexpr int kLabelInset = 5;
+constexpr int kRulerWidth = 42;
+constexpr int kMajorTickLength = 13;
+constexpr int kMediumTickLength = 9;
+constexpr int kMinorTickLength = 5;
+constexpr int kLabelInset = 3;
 constexpr double kPi = 3.14159265358979323846;
 
 struct Theme {
@@ -45,6 +46,10 @@ struct Theme {
   float glMarker[4];
 };
 
+void CopyColour(const float src[4], float dst[4]) {
+  std::copy(src, src + 4, dst);
+}
+
 Theme ThemeFor(PI_ColorScheme scheme) {
   Theme t;
   if (scheme == PI_GLOBAL_COLOR_SCHEME_NIGHT) {
@@ -60,12 +65,12 @@ Theme ThemeFor(PI_ColorScheme scheme) {
     const float minor[] = {0.50f, 0.17f, 0.14f, 0.85f};
     const float text[] = {1.00f, 0.62f, 0.48f, 1.0f};
     const float marker[] = {1.00f, 0.78f, 0.20f, 1.0f};
-    std::copy(bg, bg + 4, t.glBackground);
-    std::copy(border, border + 4, t.glBorder);
-    std::copy(major, major + 4, t.glMajor);
-    std::copy(minor, minor + 4, t.glMinor);
-    std::copy(text, text + 4, t.glText);
-    std::copy(marker, marker + 4, t.glMarker);
+    CopyColour(bg, t.glBackground);
+    CopyColour(border, t.glBorder);
+    CopyColour(major, t.glMajor);
+    CopyColour(minor, t.glMinor);
+    CopyColour(text, t.glText);
+    CopyColour(marker, t.glMarker);
   } else if (scheme == PI_GLOBAL_COLOR_SCHEME_DUSK) {
     t.background = wxColour(75, 64, 40);
     t.border = wxColour(145, 125, 78);
@@ -79,31 +84,31 @@ Theme ThemeFor(PI_ColorScheme scheme) {
     const float minor[] = {0.56f, 0.47f, 0.27f, 0.82f};
     const float text[] = {1.00f, 0.92f, 0.68f, 1.0f};
     const float marker[] = {0.30f, 0.72f, 1.00f, 1.0f};
-    std::copy(bg, bg + 4, t.glBackground);
-    std::copy(border, border + 4, t.glBorder);
-    std::copy(major, major + 4, t.glMajor);
-    std::copy(minor, minor + 4, t.glMinor);
-    std::copy(text, text + 4, t.glText);
-    std::copy(marker, marker + 4, t.glMarker);
+    CopyColour(bg, t.glBackground);
+    CopyColour(border, t.glBorder);
+    CopyColour(major, t.glMajor);
+    CopyColour(minor, t.glMinor);
+    CopyColour(text, t.glText);
+    CopyColour(marker, t.glMarker);
   } else {
-    t.background = wxColour(244, 244, 238);
-    t.border = wxColour(105, 110, 112);
-    t.major = wxColour(40, 48, 52);
-    t.minor = wxColour(125, 130, 132);
-    t.text = wxColour(15, 20, 22);
+    t.background = wxColour(246, 246, 240);
+    t.border = wxColour(75, 82, 84);
+    t.major = wxColour(35, 42, 44);
+    t.minor = wxColour(115, 122, 124);
+    t.text = wxColour(20, 24, 25);
     t.marker = wxColour(25, 115, 210);
-    const float bg[] = {0.96f, 0.96f, 0.93f, 0.88f};
-    const float border[] = {0.36f, 0.39f, 0.40f, 0.96f};
-    const float major[] = {0.10f, 0.13f, 0.15f, 0.98f};
-    const float minor[] = {0.43f, 0.46f, 0.47f, 0.82f};
-    const float text[] = {0.03f, 0.04f, 0.05f, 1.0f};
+    const float bg[] = {0.97f, 0.97f, 0.94f, 0.90f};
+    const float border[] = {0.25f, 0.28f, 0.29f, 0.96f};
+    const float major[] = {0.08f, 0.10f, 0.11f, 0.98f};
+    const float minor[] = {0.40f, 0.43f, 0.44f, 0.82f};
+    const float text[] = {0.03f, 0.04f, 0.04f, 1.0f};
     const float marker[] = {0.08f, 0.38f, 0.88f, 1.0f};
-    std::copy(bg, bg + 4, t.glBackground);
-    std::copy(border, border + 4, t.glBorder);
-    std::copy(major, major + 4, t.glMajor);
-    std::copy(minor, minor + 4, t.glMinor);
-    std::copy(text, text + 4, t.glText);
-    std::copy(marker, marker + 4, t.glMarker);
+    CopyColour(bg, t.glBackground);
+    CopyColour(border, t.glBorder);
+    CopyColour(major, t.glMajor);
+    CopyColour(minor, t.glMinor);
+    CopyColour(text, t.glText);
+    CopyColour(marker, t.glMarker);
   }
   return t;
 }
@@ -148,83 +153,105 @@ int FindYForLatitude(PlugIn_ViewPort *vp, double target, double latTop,
   return std::fabs(latLow - target) <= std::fabs(latHigh - target) ? low : high;
 }
 
-double ChooseMajorStep(double spanDegrees, int heightPixels) {
-  if (!(spanDegrees > 0.0) || heightPixels <= 0) return 1.0;
-  const double desired = spanDegrees * 82.0 / static_cast<double>(heightPixels);
-  static const double steps[] = {
-      1.0 / 3600.0, 2.0 / 3600.0, 5.0 / 3600.0,
-      10.0 / 3600.0, 15.0 / 3600.0, 30.0 / 3600.0,
-      1.0 / 60.0, 2.0 / 60.0, 5.0 / 60.0, 10.0 / 60.0,
-      15.0 / 60.0, 30.0 / 60.0, 1.0, 2.0, 5.0, 10.0, 15.0,
-      30.0, 45.0, 90.0};
+struct ScaleSpec {
+  double tickMinutes = 1.0;
+  double mediumMinutes = 5.0;
+  double labelMinutes = 10.0;
+};
+
+ScaleSpec ChooseScale(double spanDegrees, int heightPixels) {
+  ScaleSpec spec;
+  if (!(spanDegrees > 0.0) || heightPixels <= 0) return spec;
+
+  const double desiredTickMinutes =
+      spanDegrees * 60.0 * 9.0 / static_cast<double>(heightPixels);
+  static const double steps[] = {0.1, 0.2, 0.5, 1.0, 2.0, 5.0, 10.0,
+                                 15.0, 30.0, 60.0, 120.0, 300.0,
+                                 600.0, 900.0, 1800.0, 3600.0};
+  spec.tickMinutes = steps[sizeof(steps) / sizeof(steps[0]) - 1];
   for (double step : steps) {
-    if (step >= desired) return step;
+    if (step >= desiredTickMinutes) {
+      spec.tickMinutes = step;
+      break;
+    }
   }
-  return 90.0;
+
+  if (spec.tickMinutes <= 0.1) {
+    spec.mediumMinutes = 0.5;
+    spec.labelMinutes = 1.0;
+  } else if (spec.tickMinutes <= 0.2) {
+    spec.mediumMinutes = 1.0;
+    spec.labelMinutes = 1.0;
+  } else if (spec.tickMinutes <= 0.5) {
+    spec.mediumMinutes = 1.0;
+    spec.labelMinutes = 5.0;
+  } else if (spec.tickMinutes <= 1.0) {
+    spec.mediumMinutes = 5.0;
+    spec.labelMinutes = 10.0;
+  } else if (spec.tickMinutes <= 2.0) {
+    spec.mediumMinutes = 10.0;
+    spec.labelMinutes = 10.0;
+  } else if (spec.tickMinutes <= 5.0) {
+    spec.mediumMinutes = 10.0;
+    spec.labelMinutes = 30.0;
+  } else if (spec.tickMinutes <= 10.0) {
+    spec.mediumMinutes = 30.0;
+    spec.labelMinutes = 30.0;
+  } else if (spec.tickMinutes <= 15.0) {
+    spec.mediumMinutes = 30.0;
+    spec.labelMinutes = 60.0;
+  } else if (spec.tickMinutes <= 30.0) {
+    spec.mediumMinutes = 60.0;
+    spec.labelMinutes = 60.0;
+  } else {
+    spec.mediumMinutes = spec.tickMinutes;
+    spec.labelMinutes = spec.tickMinutes;
+  }
+  return spec;
 }
 
-wxString FormatLatitude(double lat, double majorStep) {
-  const bool north = lat >= 0.0;
+bool IsMultiple(double value, double step) {
+  if (!(step > 0.0)) return false;
+  const double q = value / step;
+  return std::fabs(q - std::round(q)) < 1.0e-6;
+}
+
+wxString FormatScaleLabel(double lat) {
   double value = std::fabs(lat);
   int deg = static_cast<int>(std::floor(value + 1.0e-10));
-  double minFull = (value - deg) * 60.0;
-  int min = static_cast<int>(std::floor(minFull + 1.0e-8));
-  int sec = static_cast<int>(std::lround((minFull - min) * 60.0));
-  if (sec >= 60) {
-    sec = 0;
-    ++min;
-  }
+  int min = static_cast<int>(std::lround((value - deg) * 60.0));
   if (min >= 60) {
     min = 0;
     ++deg;
   }
-
-  const wxString degree = wxString::FromUTF8("°");
-  const wxString hemi = north ? wxT("N") : wxT("S");
-  if (majorStep >= 1.0 - 1.0e-10)
-    return wxString::Format(wxT("%d"), deg) + degree + wxT(" ") + hemi;
-  if (majorStep >= 1.0 / 60.0 - 1.0e-10)
-    return wxString::Format(wxT("%d"), deg) + degree +
-           wxString::Format(wxT("%02d' "), min) + hemi;
-  return wxString::Format(wxT("%d"), deg) + degree +
-         wxString::Format(wxT("%02d'%02d\" "), min, sec) + hemi;
+  if (min == 0)
+    return wxString::Format(wxT("%d"), deg) + wxString::FromUTF8("°");
+  return wxString::Format(wxT("%02d'"), min);
 }
 
-std::string FormatLatitudeAscii(double lat, double majorStep) {
-  const bool north = lat >= 0.0;
+std::string FormatScaleLabelAscii(double lat) {
   double value = std::fabs(lat);
   int deg = static_cast<int>(std::floor(value + 1.0e-10));
-  double minFull = (value - deg) * 60.0;
-  int min = static_cast<int>(std::floor(minFull + 1.0e-8));
-  int sec = static_cast<int>(std::lround((minFull - min) * 60.0));
-  if (sec >= 60) {
-    sec = 0;
-    ++min;
-  }
+  int min = static_cast<int>(std::lround((value - deg) * 60.0));
   if (min >= 60) {
     min = 0;
     ++deg;
   }
-
-  char buffer[32];
-  if (majorStep >= 1.0 - 1.0e-10)
-    std::snprintf(buffer, sizeof(buffer), "%do%c", deg, north ? 'N' : 'S');
-  else if (majorStep >= 1.0 / 60.0 - 1.0e-10)
-    std::snprintf(buffer, sizeof(buffer), "%do%02d'%c", deg, min,
-                  north ? 'N' : 'S');
+  char buffer[16];
+  if (min == 0)
+    std::snprintf(buffer, sizeof(buffer), "%do", deg);
   else
-    std::snprintf(buffer, sizeof(buffer), "%do%02d'%02d\"%c", deg, min, sec,
-                  north ? 'N' : 'S');
+    std::snprintf(buffer, sizeof(buffer), "%02d'", min);
   return std::string(buffer);
 }
 
 struct Tick {
   double latitude = 0.0;
   int y = 0;
-  bool major = false;
+  int level = 0;  // 0 minor, 1 medium, 2 labelled
 };
 
-std::vector<Tick> BuildTicks(PlugIn_ViewPort *vp, double *majorStepOut) {
+std::vector<Tick> BuildTicks(PlugIn_ViewPort *vp, ScaleSpec *specOut) {
   std::vector<Tick> ticks;
   double latTop = 0.0;
   double latBottom = 0.0;
@@ -232,27 +259,33 @@ std::vector<Tick> BuildTicks(PlugIn_ViewPort *vp, double *majorStepOut) {
 
   const double minLat = std::max(-90.0, std::min(latTop, latBottom));
   const double maxLat = std::min(90.0, std::max(latTop, latBottom));
-  const double span = maxLat - minLat;
-  const double majorStep = ChooseMajorStep(span, vp->pix_height);
-  const double minorStep = majorStep / 5.0;
-  if (majorStepOut) *majorStepOut = majorStep;
+  const ScaleSpec spec = ChooseScale(maxLat - minLat, vp->pix_height);
+  if (specOut) *specOut = spec;
 
+  const double tickDegrees = spec.tickMinutes / 60.0;
   const long long firstIndex =
-      static_cast<long long>(std::ceil((minLat - 1.0e-12) / minorStep));
+      static_cast<long long>(std::ceil((minLat - 1.0e-12) / tickDegrees));
   const long long lastIndex =
-      static_cast<long long>(std::floor((maxLat + 1.0e-12) / minorStep));
-
-  if (lastIndex - firstIndex > 1000) return ticks;
+      static_cast<long long>(std::floor((maxLat + 1.0e-12) / tickDegrees));
+  if (lastIndex - firstIndex > 2000) return ticks;
 
   for (long long i = firstIndex; i <= lastIndex; ++i) {
-    const double lat = i * minorStep;
+    const double lat = i * tickDegrees;
     const int y = FindYForLatitude(vp, lat, latTop, latBottom);
     if (y < -2 || y > vp->pix_height + 2) continue;
-    const long long majorIndex =
-        static_cast<long long>(std::llround(lat / majorStep));
-    const bool major =
-        std::fabs(lat - majorIndex * majorStep) < minorStep * 0.08;
-    ticks.push_back({lat, y, major});
+
+    const double minutesFromEquator = lat * 60.0;
+    int level = 0;
+    if (IsMultiple(minutesFromEquator, spec.labelMinutes))
+      level = 2;
+    else if (IsMultiple(minutesFromEquator, spec.mediumMinutes))
+      level = 1;
+
+    Tick tick;
+    tick.latitude = lat;
+    tick.y = y;
+    tick.level = level;
+    ticks.push_back(tick);
   }
   return ticks;
 }
@@ -289,28 +322,15 @@ void DrawVectorGlyphGL(char c, float x, float y, float s) {
   }
 
   glBegin(GL_LINES);
-  if (c == 'N') {
-    DrawSegment(x, y + h, x, y);
-    DrawSegment(x, y, x + w, y + h);
-    DrawSegment(x + w, y + h, x + w, y);
-  } else if (c == 'S') {
-    DrawSegment(x + w, y, x, y);
-    DrawSegment(x, y, x, y + h / 2);
-    DrawSegment(x, y + h / 2, x + w, y + h / 2);
-    DrawSegment(x + w, y + h / 2, x + w, y + h);
-    DrawSegment(x + w, y + h, x, y + h);
-  } else if (c == '\'') {
+  if (c == '\'') {
     DrawSegment(x + w * 0.55f, y, x + w * 0.40f, y + h * 0.26f);
-  } else if (c == '"') {
-    DrawSegment(x + w * 0.30f, y, x + w * 0.22f, y + h * 0.24f);
-    DrawSegment(x + w * 0.75f, y, x + w * 0.67f, y + h * 0.24f);
   }
   glEnd();
 
   if (c == 'o') {
     const float cx = x + w * 0.52f;
     const float cy = y + h * 0.20f;
-    const float r = 1.15f * s;
+    const float r = 1.10f * s;
     glBegin(GL_LINE_LOOP);
     for (int i = 0; i < 12; ++i) {
       const float a = static_cast<float>(i) * 2.0f *
@@ -324,15 +344,11 @@ void DrawVectorGlyphGL(char c, float x, float y, float s) {
 void DrawVectorTextGL(const std::string &text, float x, float y, float s,
                       const float colour[4]) {
   SetGLColour(colour);
-  glLineWidth(std::max(1.4f, 1.25f * s));
+  glLineWidth(std::max(1.2f, 1.15f * s));
   float cursor = x;
   for (char c : text) {
-    if (c == ' ') {
-      cursor += 3.0f * s;
-      continue;
-    }
     DrawVectorGlyphGL(c, cursor, y, s);
-    cursor += 5.5f * s;
+    cursor += 5.3f * s;
   }
 }
 
@@ -382,11 +398,12 @@ int LatitudeRulerPi::GetToolbarToolCount() { return 1; }
 wxBitmap *LatitudeRulerPi::GetPlugInBitmap() { return &m_pluginBitmap; }
 wxString LatitudeRulerPi::GetCommonName() { return wxT("Latitude Ruler"); }
 wxString LatitudeRulerPi::GetShortDescription() {
-  return wxT("Adaptive latitude ruler on the left side of the chart");
+  return wxT("Nautical latitude scale on the left side of the chart");
 }
 wxString LatitudeRulerPi::GetLongDescription() {
-  return wxT("Shows a nautical latitude scale along the left chart edge. "
-             "Tick spacing follows the current OpenCPN viewport and zoom level.");
+  return wxT("Shows a compact chart-style latitude scale. One minute of "
+             "latitude corresponds to one nautical mile, making distances "
+             "easy to estimate directly from the chart.");
 }
 
 void LatitudeRulerPi::BuildToolbarBitmap() {
@@ -436,15 +453,12 @@ bool LatitudeRulerPi::MouseEventHook(wxMouseEvent &event) {
   const bool inside = m_enabled && !event.Leaving() && event.GetY() >= 0;
   const int newY = inside ? event.GetY() : -1;
   const bool changed = (inside != m_mouseInside) || (newY != m_mouseY);
-
   m_mouseInside = inside;
   m_mouseY = newY;
-
   if (changed) {
     wxWindow *canvas = GetOCPNCanvasWindow();
     if (canvas) RequestRefresh(canvas);
   }
-
   return false;
 }
 
@@ -457,20 +471,19 @@ void LatitudeRulerPi::SetColorScheme(PI_ColorScheme cs) {
 bool LatitudeRulerPi::RenderOverlay(wxDC &dc, PlugIn_ViewPort *vp) {
   if (!m_enabled || !vp || !vp->bValid || vp->pix_height < 10) return false;
 
-  double majorStep = 1.0;
-  const std::vector<Tick> ticks = BuildTicks(vp, &majorStep);
+  ScaleSpec spec;
+  const std::vector<Tick> ticks = BuildTicks(vp, &spec);
   if (ticks.empty()) return false;
-
   const Theme theme = ThemeFor(m_colorScheme);
+
   dc.SetPen(*wxTRANSPARENT_PEN);
   dc.SetBrush(wxBrush(theme.background));
   dc.DrawRectangle(0, 0, kRulerWidth, vp->pix_height);
-
   dc.SetPen(wxPen(theme.border, 1));
   dc.DrawLine(kRulerWidth - 1, 0, kRulerWidth - 1, vp->pix_height);
 
   wxFont font = *wxNORMAL_FONT;
-  font.SetPointSize(std::max(9, font.GetPointSize()));
+  font.SetPointSize(std::max(8, font.GetPointSize() - 1));
   font.SetWeight(wxFONTWEIGHT_BOLD);
   dc.SetFont(font);
   dc.SetTextForeground(theme.text);
@@ -478,17 +491,20 @@ bool LatitudeRulerPi::RenderOverlay(wxDC &dc, PlugIn_ViewPort *vp) {
 
   for (const Tick &tick : ticks) {
     const int x2 = kRulerWidth - 1;
-    const int length = tick.major ? kMajorTickLength : kMinorTickLength;
-    dc.SetPen(wxPen(tick.major ? theme.major : theme.minor,
-                    tick.major ? 2 : 1));
+    const int length = tick.level == 2 ? kMajorTickLength
+                       : tick.level == 1 ? kMediumTickLength
+                                         : kMinorTickLength;
+    dc.SetPen(wxPen(tick.level == 0 ? theme.minor : theme.major,
+                    tick.level == 2 ? 2 : 1));
     dc.DrawLine(x2 - length, tick.y, x2, tick.y);
 
-    if (tick.major) {
-      const wxString label = FormatLatitude(tick.latitude, majorStep);
+    if (tick.level == 2) {
+      const wxString label = FormatScaleLabel(tick.latitude);
       wxCoord tw = 0, th = 0;
       dc.GetTextExtent(label, &tw, &th);
       const int labelY = tick.y - static_cast<int>(th) / 2;
-      if (labelY >= -2 && labelY + th <= vp->pix_height + 2)
+      if (labelY >= -2 && labelY + th <= vp->pix_height + 2 &&
+          tw <= kRulerWidth - kMajorTickLength - 3)
         dc.DrawText(label, kLabelInset, labelY);
     }
   }
@@ -496,13 +512,12 @@ bool LatitudeRulerPi::RenderOverlay(wxDC &dc, PlugIn_ViewPort *vp) {
   if (m_mouseInside && m_mouseY >= 0 && m_mouseY < vp->pix_height) {
     const int y = m_mouseY;
     wxPoint marker[3] = {wxPoint(kRulerWidth - 1, y),
-                         wxPoint(kRulerWidth - 13, y - 6),
-                         wxPoint(kRulerWidth - 13, y + 6)};
+                         wxPoint(kRulerWidth - 9, y - 5),
+                         wxPoint(kRulerWidth - 9, y + 5)};
     dc.SetPen(wxPen(theme.marker, 1));
     dc.SetBrush(wxBrush(theme.marker));
     dc.DrawPolygon(3, marker);
   }
-
   return true;
 }
 
@@ -515,8 +530,8 @@ bool LatitudeRulerPi::RenderGLOverlayMultiCanvas(wxGLContext *pcontext,
   if (priority != -1 && priority != OVERLAY_LEGACY) return false;
   if (!m_enabled || !vp || !vp->bValid || vp->pix_height < 10) return false;
 
-  double majorStep = 1.0;
-  const std::vector<Tick> ticks = BuildTicks(vp, &majorStep);
+  ScaleSpec spec;
+  const std::vector<Tick> ticks = BuildTicks(vp, &spec);
   if (ticks.empty()) return false;
   const Theme theme = ThemeFor(m_colorScheme);
 
@@ -554,19 +569,21 @@ bool LatitudeRulerPi::RenderGLOverlayMultiCanvas(wxGLContext *pcontext,
   glEnd();
 
   for (const Tick &tick : ticks) {
-    SetGLColour(tick.major ? theme.glMajor : theme.glMinor);
-    glLineWidth(tick.major ? 2.0f : 1.0f);
+    SetGLColour(tick.level == 0 ? theme.glMinor : theme.glMajor);
+    glLineWidth(tick.level == 2 ? 2.0f : 1.0f);
     const float x2 = static_cast<float>(kRulerWidth - 1);
-    const float length =
-        static_cast<float>(tick.major ? kMajorTickLength : kMinorTickLength);
+    const float length = static_cast<float>(
+        tick.level == 2 ? kMajorTickLength
+        : tick.level == 1 ? kMediumTickLength
+                          : kMinorTickLength);
     glBegin(GL_LINES);
     DrawSegment(x2 - length, static_cast<float>(tick.y), x2,
                 static_cast<float>(tick.y));
     glEnd();
 
-    if (tick.major) {
-      const std::string label = FormatLatitudeAscii(tick.latitude, majorStep);
-      const float scale = 1.38f;
+    if (tick.level == 2) {
+      const std::string label = FormatScaleLabelAscii(tick.latitude);
+      const float scale = 1.10f;
       const float labelHeight = 7.0f * scale;
       const float y = static_cast<float>(tick.y) - labelHeight * 0.5f;
       if (y >= -2.0f && y + labelHeight <= vp->pix_height + 2.0f)
@@ -580,8 +597,8 @@ bool LatitudeRulerPi::RenderGLOverlayMultiCanvas(wxGLContext *pcontext,
     SetGLColour(theme.glMarker);
     glBegin(GL_TRIANGLES);
     glVertex2f(static_cast<float>(kRulerWidth - 1), y);
-    glVertex2f(static_cast<float>(kRulerWidth - 13), y - 6.0f);
-    glVertex2f(static_cast<float>(kRulerWidth - 13), y + 6.0f);
+    glVertex2f(static_cast<float>(kRulerWidth - 9), y - 5.0f);
+    glVertex2f(static_cast<float>(kRulerWidth - 9), y + 5.0f);
     glEnd();
   }
 
