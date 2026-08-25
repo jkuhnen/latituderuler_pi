@@ -1,3 +1,7 @@
 [submodule "opencpn-libs"]
 	path = opencpn-libs
 	url = https://github.com/OpenCPN/opencpn-libs.git
+[submodule ".devkit"]
+	path = .devkit
+	url = https://github.com/jkuhnen/opencpn-plugin-devkit.git
+	branch = main
