@@ -16,6 +16,8 @@ A small OpenCPN 1.18 plugin which draws a nautical latitude ruler along the left
 
 This repository follows the same lightweight API-18 structure used by the other OpenCPN plugins in this account.
 
+Shared development conventions are provided by the development-only `.devkit` submodule. Contributors and coding agents should clone recursively, as shown below, or initialize submodules with `git submodule update --init --recursive`. The DevKit is guidance only and is not a runtime, build, or package dependency.
+
 ```bat
 git clone --recurse-submodules https://github.com/jkuhnen/latituderuler_pi.git
 cd latituderuler_pi
