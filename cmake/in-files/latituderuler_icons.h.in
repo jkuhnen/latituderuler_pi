@@ -1,0 +1,17 @@
+#ifndef LATITUDERULER_ICONS_H
+#define LATITUDERULER_ICONS_H
+
+namespace latituderuler_icons {
+
+static const char kDaySvg[] =
+    R"latituderuler_svg(@LATITUDERULER_ICON_DAY_SVG@)latituderuler_svg";
+
+static const char kWhiteSvg[] =
+    R"latituderuler_svg(@LATITUDERULER_ICON_WHITE_SVG@)latituderuler_svg";
+
+static const char kNavySvg[] =
+    R"latituderuler_svg(@LATITUDERULER_ICON_NAVY_SVG@)latituderuler_svg";
+
+}  // namespace latituderuler_icons
+
+#endif
