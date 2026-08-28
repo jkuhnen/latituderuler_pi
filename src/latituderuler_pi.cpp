@@ -1,3 +1,4 @@
+#include "latituderuler_icons.h"
 #include "latituderuler_pi.h"
 #include "version.h"
 
@@ -13,7 +14,7 @@
 #include <string>
 #include <vector>
 
-#include <wx/dcmemory.h>
+#include <wx/bmpbndl.h>
 #include <wx/fileconf.h>
 
 #ifdef _WIN32
@@ -30,6 +31,13 @@ constexpr int kMediumTickLength = 9;
 constexpr int kMinorTickLength = 5;
 constexpr int kLabelInset = 3;
 constexpr double kPi = 3.14159265358979323846;
+
+wxBitmap BitmapFromSvg(const char *svg, wxWindow *window) {
+  const wxBitmapBundle bundle =
+      wxBitmapBundle::FromSVG(svg, wxSize(32, 32));
+  return window ? bundle.GetBitmapFor(window)
+                : bundle.GetBitmap(wxSize(32, 32));
+}
 
 struct Theme {
   wxColour background;
@@ -366,7 +374,7 @@ LatitudeRulerPi::LatitudeRulerPi(void *ppimgr) : opencpn_plugin_118(ppimgr) {}
 
 int LatitudeRulerPi::Init() {
   LoadConfig();
-  BuildToolbarBitmap();
+  BuildIconBitmaps();
   m_toolbarId = InsertPlugInTool(wxT(""), &m_toolbarBitmap, &m_toolbarBitmap,
                                  wxITEM_CHECK, wxT("Latitude Ruler"),
                                  wxT("Show latitude ruler"), nullptr, -1, 0,
@@ -406,23 +414,15 @@ wxString LatitudeRulerPi::GetLongDescription() {
              "easy to estimate directly from the chart.");
 }
 
-void LatitudeRulerPi::BuildToolbarBitmap() {
-  m_toolbarBitmap = wxBitmap(32, 32, 32);
-  wxMemoryDC dc(m_toolbarBitmap);
-  dc.SetBackground(wxBrush(wxColour(45, 54, 58)));
-  dc.Clear();
-  dc.SetPen(wxPen(wxColour(235, 240, 242), 2));
-  dc.DrawLine(9, 4, 9, 28);
-  for (int y = 6; y <= 26; y += 4) {
-    const int len = (y % 8 == 6) ? 11 : 7;
-    dc.DrawLine(9, y, 9 + len, y);
-  }
-  dc.SetTextForeground(wxColour(235, 240, 242));
-  wxFont font(8, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
-  dc.SetFont(font);
-  dc.DrawText(wxT("N"), 21, 10);
-  dc.SelectObject(wxNullBitmap);
-  m_pluginBitmap = m_toolbarBitmap;
+void LatitudeRulerPi::BuildIconBitmaps() {
+  wxWindow *canvas = GetOCPNCanvasWindow();
+  m_pluginBitmap = BitmapFromSvg(latituderuler_icons::kDaySvg, canvas);
+
+  const bool lowLight = m_colorScheme == PI_GLOBAL_COLOR_SCHEME_DUSK ||
+                        m_colorScheme == PI_GLOBAL_COLOR_SCHEME_NIGHT;
+  const char *toolbarSvg = lowLight ? latituderuler_icons::kWhiteSvg
+                                    : latituderuler_icons::kDaySvg;
+  m_toolbarBitmap = BitmapFromSvg(toolbarSvg, canvas);
 }
 
 void LatitudeRulerPi::LoadConfig() {
@@ -464,6 +464,11 @@ bool LatitudeRulerPi::MouseEventHook(wxMouseEvent &event) {
 
 void LatitudeRulerPi::SetColorScheme(PI_ColorScheme cs) {
   m_colorScheme = cs;
+  BuildIconBitmaps();
+  if (m_toolbarId >= 0) {
+    SetToolbarToolBitmaps(m_toolbarId, &m_toolbarBitmap, &m_toolbarBitmap);
+    SetToolbarItemState(m_toolbarId, m_enabled);
+  }
   wxWindow *canvas = GetOCPNCanvasWindow();
   if (canvas) RequestRefresh(canvas);
 }
