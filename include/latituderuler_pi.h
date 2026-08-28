@@ -34,7 +34,7 @@ public:
                                   int canvasIndex, int priority = -1) override;
 
 private:
-  void BuildToolbarBitmap();
+  void BuildIconBitmaps();
   void LoadConfig();
   void SaveConfig();
 
