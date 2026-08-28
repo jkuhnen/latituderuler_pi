@@ -8,6 +8,27 @@ set(PACKAGE_NAME "latituderuler_pi")
 set(PACKAGE_VERSION "${PROJECT_VERSION}")
 set(OCPN_API_VERSION "1.18")
 
+set(LATITUDERULER_ICON_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/assets/icons/latituderuler.svg
+    ${CMAKE_CURRENT_SOURCE_DIR}/assets/icons/latituderuler-white.svg
+    ${CMAKE_CURRENT_SOURCE_DIR}/assets/icons/latituderuler-navy.svg
+)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    ${LATITUDERULER_ICON_FILES}
+)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/assets/icons/latituderuler.svg
+    LATITUDERULER_ICON_DAY_SVG)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/assets/icons/latituderuler-white.svg
+    LATITUDERULER_ICON_WHITE_SVG)
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/assets/icons/latituderuler-navy.svg
+    LATITUDERULER_ICON_NAVY_SVG)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated)
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/in-files/latituderuler_icons.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/latituderuler_icons.h
+    @ONLY
+)
+
 find_package(wxWidgets REQUIRED COMPONENTS base core aui)
 find_package(OpenGL REQUIRED)
 include(${wxWidgets_USE_FILE})
@@ -19,6 +40,7 @@ add_library(latituderuler_pi SHARED
 
 target_include_directories(latituderuler_pi PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}/generated
 )
 
 add_subdirectory(opencpn-libs/api-18)
